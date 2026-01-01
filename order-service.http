@@ -1,0 +1,444 @@
+### ========================================
+### ORDER SERVICE API TESTS
+### ========================================
+
+### ========================================
+### 1. AUTHENTICATION
+### ========================================
+
+### Login as ADMIN
+POST http://localhost:8080/realms/ecommerce/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+    &client_id=product-service
+    &client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6
+    &username=admin
+    &password=admin123
+
+> {% client.global.set("admin_token", response.body.access_token) %}
+
+###
+
+### Login as CLIENT
+POST http://localhost:8080/realms/ecommerce/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+    &client_id=product-service
+    &client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6
+    &username=client
+    &password=client123
+
+> {% client.global.set("client_token", response.body.access_token) %}
+
+###
+
+### ========================================
+### 2. PRODUCT OPERATIONS (Setup for Orders)
+### ========================================
+
+### Create Product 1 (Laptop) - ADMIN
+POST http://localhost:8081/api/products
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "Laptop Dell XPS 15",
+  "description": "High performance laptop with Intel i7, 16GB RAM, 512GB SSD",
+  "price": 1299.99,
+  "stockQuantity": 50
+}
+
+> {% client.global.set("product_id_1", response.body.id) %}
+
+###
+
+### Create Product 2 (iPhone) - ADMIN
+POST http://localhost:8081/api/products
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "iPhone 15 Pro",
+  "description": "Latest Apple smartphone with A17 Pro chip",
+  "price": 999.99,
+  "stockQuantity": 100
+}
+
+> {% client.global.set("product_id_2", response.body.id) %}
+
+###
+
+### Create Product 3 (Samsung) - ADMIN
+POST http://localhost:8081/api/products
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "Samsung Galaxy S24",
+  "description": "Flagship Android smartphone",
+  "price": 899.99,
+  "stockQuantity": 75
+}
+
+> {% client.global.set("product_id_3", response.body.id) %}
+
+###
+
+### Get all products (to verify)
+GET http://localhost:8081/api/products
+Authorization: Bearer {{client_token}}
+
+###
+
+### ========================================
+### 3. ORDER OPERATIONS (CLIENT)
+### ========================================
+
+### Create Order - CLIENT (Success)
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": {{product_id_1}},
+      "quantity": 2
+    },
+    {
+      "productId": {{product_id_2}},
+      "quantity": 1
+    }
+  ]
+}
+
+> {% client.global.set("order_id_1", response.body.id) %}
+
+###
+
+### Create Order 2 - CLIENT (Another order)
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": {{product_id_3}},
+      "quantity": 3
+    }
+  ]
+}
+
+> {% client.global.set("order_id_2", response.body.id) %}
+
+###
+
+### Create Order with multiple items - CLIENT
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": {{product_id_1}},
+      "quantity": 1
+    },
+    {
+      "productId": {{product_id_2}},
+      "quantity": 2
+    },
+    {
+      "productId": {{product_id_3}},
+      "quantity": 1
+    }
+  ]
+}
+
+> {% client.global.set("order_id_3", response.body.id) %}
+
+###
+
+### ========================================
+### 4. GET ORDERS (CLIENT)
+### ========================================
+
+### Get my orders - CLIENT
+GET http://localhost:8082/api/orders/my-orders
+Authorization: Bearer {{client_token}}
+
+###
+
+### Get specific order by ID - CLIENT (own order)
+GET http://localhost:8082/api/orders/{{order_id_1}}
+Authorization: Bearer {{client_token}}
+
+###
+
+### ========================================
+### 5. GET ORDERS (ADMIN)
+### ========================================
+
+### Get all orders - ADMIN
+GET http://localhost:8082/api/orders
+Authorization: Bearer {{admin_token}}
+
+###
+
+### Get specific order by ID - ADMIN (any order)
+GET http://localhost:8082/api/orders/{{order_id_1}}
+Authorization: Bearer {{admin_token}}
+
+###
+
+### ========================================
+### 6. ERROR SCENARIOS
+### ========================================
+
+### Try to create order without authentication (Should fail with 401)
+POST http://localhost:8082/api/orders
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": {{product_id_1}},
+      "quantity": 1
+    }
+  ]
+}
+
+###
+
+### Try to create order as ADMIN (Should fail with 403 - only CLIENT can create)
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": {{product_id_1}},
+      "quantity": 1
+    }
+  ]
+}
+
+###
+
+### Try to get all orders as CLIENT (Should fail with 403 - only ADMIN)
+GET http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+
+###
+
+### Create order with non-existent product (Should fail with 404)
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 99999,
+      "quantity": 1
+    }
+  ]
+}
+
+###
+
+### Create order with insufficient stock (Should fail with 400)
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": {{product_id_1}},
+      "quantity": 1000
+    }
+  ]
+}
+
+###
+
+### Create order with invalid quantity (Should fail with 400 - validation error)
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": {{product_id_1}},
+      "quantity": 0
+    }
+  ]
+}
+
+###
+
+### Create order with empty items list (Should fail with 400 - validation error)
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+Content-Type: application/json
+
+{
+  "items": []
+}
+
+###
+
+### Create order with missing productId (Should fail with 400 - validation error)
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{client_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "quantity": 2
+    }
+  ]
+}
+
+###
+
+### Get non-existent order (Should fail with 404)
+GET http://localhost:8082/api/orders/99999
+Authorization: Bearer {{client_token}}
+
+###
+
+### ========================================
+### 7. HEALTH CHECKS
+### ========================================
+
+### Check Order Service Health
+GET http://localhost:8082/actuator/health
+
+###
+
+### Check Product Service Health
+GET http://localhost:8081/actuator/health
+
+###
+
+### ========================================
+### 8. COMPLETE WORKFLOW TEST
+### ========================================
+
+### STEP 1: Login as CLIENT
+POST http://localhost:8080/realms/ecommerce/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+    &client_id=product-service
+    &client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6
+    &username=client
+    &password=client123
+
+> {% client.global.set("workflow_client_token", response.body.access_token) %}
+
+###
+
+### STEP 2: Browse products
+GET http://localhost:8081/api/products
+Authorization: Bearer {{workflow_client_token}}
+
+###
+
+### STEP 3: Get specific product details
+GET http://localhost:8081/api/products/{{product_id_1}}
+Authorization: Bearer {{workflow_client_token}}
+
+###
+
+### STEP 4: Create order with selected products
+POST http://localhost:8082/api/orders
+Authorization: Bearer {{workflow_client_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": {{product_id_1}},
+      "quantity": 1
+    },
+    {
+      "productId": {{product_id_2}},
+      "quantity": 2
+    }
+  ]
+}
+
+> {% client.global.set("workflow_order_id", response.body.id) %}
+
+###
+
+### STEP 5: View order confirmation
+GET http://localhost:8082/api/orders/{{workflow_order_id}}
+Authorization: Bearer {{workflow_client_token}}
+
+###
+
+### STEP 6: View all my orders
+GET http://localhost:8082/api/orders/my-orders
+Authorization: Bearer {{workflow_client_token}}
+
+###
+
+### ========================================
+### 9. ADMIN WORKFLOW
+### ========================================
+
+### STEP 1: Login as ADMIN
+POST http://localhost:8080/realms/ecommerce/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+    &client_id=product-service
+    &client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6
+    &username=admin
+    &password=admin123
+
+> {% client.global.set("workflow_admin_token", response.body.access_token) %}
+
+###
+
+### STEP 2: View all orders in the system
+GET http://localhost:8082/api/orders
+Authorization: Bearer {{workflow_admin_token}}
+
+###
+
+### STEP 3: View specific customer order
+GET http://localhost:8082/api/orders/{{order_id_1}}
+Authorization: Bearer {{workflow_admin_token}}
+
+###
+
+### STEP 4: Manage products inventory
+GET http://localhost:8081/api/products
+Authorization: Bearer {{workflow_admin_token}}
+
+###
+
+### STEP 5: Update product stock
+PUT http://localhost:8081/api/products/{{product_id_1}}
+Authorization: Bearer {{workflow_admin_token}}
+Content-Type: application/json
+
+{
+  "name": "Laptop Dell XPS 15",
+  "description": "High performance laptop with Intel i7, 16GB RAM, 512GB SSD",
+  "price": 1299.99,
+  "stockQuantity": 45
+}
+
+###
