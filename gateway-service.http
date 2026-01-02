@@ -1,21 +1,16 @@
 ### ========================================
-### API GATEWAY TESTS
-### All requests go through Gateway (Port 8083)
+### GATEWAY API TESTS - ALL THROUGH PORT 8083
 ### ========================================
 
 ### ========================================
-### 1. AUTHENTICATION via Gateway
+### 1. AUTHENTICATION (through Gateway)
 ### ========================================
 
 ### Login as ADMIN via Gateway
 POST http://localhost:8083/realms/ecommerce/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password
-    &client_id=product-service
-    &client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6
-    &username=admin
-    &password=admin123
+grant_type=password&client_id=product-service&client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6&username=admin&password=admin123
 
 > {% client.global.set("gw_admin_token", response.body.access_token) %}
 
@@ -25,18 +20,14 @@ grant_type=password
 POST http://localhost:8083/realms/ecommerce/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password
-    &client_id=product-service
-    &client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6
-    &username=client
-    &password=client123
+grant_type=password&client_id=product-service&client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6&username=client&password=client123
 
 > {% client.global.set("gw_client_token", response.body.access_token) %}
 
 ###
 
 ### ========================================
-### 2. PRODUCT OPERATIONS via Gateway
+### 2. PRODUCT OPERATIONS (through Gateway)
 ### ========================================
 
 ### Create Product via Gateway - ADMIN
@@ -45,44 +36,66 @@ Authorization: Bearer {{gw_admin_token}}
 Content-Type: application/json
 
 {
-  "name": "MacBook Pro M3",
-  "description": "Latest Apple laptop with M3 chip",
-  "price": 2499.99,
-  "stockQuantity": 30
+  "name": "Laptop Dell XPS 15",
+  "description": "High performance laptop with Intel i7, 16GB RAM, 512GB SSD",
+  "price": 1299.99,
+  "stockQuantity": 50
 }
 
-> {% client.global.set("gw_product_id", response.body.id) %}
+> {% client.global.set("gw_product_id_1", response.body.id) %}
 
 ###
 
-### Get all products via Gateway - CLIENT
+### Create Product 2 via Gateway - ADMIN
+POST http://localhost:8083/api/products
+Authorization: Bearer {{gw_admin_token}}
+Content-Type: application/json
+
+{
+  "name": "iPhone 15 Pro",
+  "description": "Latest Apple smartphone with A17 Pro chip",
+  "price": 999.99,
+  "stockQuantity": 100
+}
+
+> {% client.global.set("gw_product_id_2", response.body.id) %}
+
+###
+
+### Get all products via Gateway
 GET http://localhost:8083/api/products
 Authorization: Bearer {{gw_client_token}}
 
 ###
 
 ### Get specific product via Gateway
-GET http://localhost:8083/api/products/{{gw_product_id}}
+GET http://localhost:8083/api/products/{{gw_product_id_1}}
 Authorization: Bearer {{gw_client_token}}
 
 ###
 
 ### Update product via Gateway - ADMIN
-PUT http://localhost:8083/api/products/{{gw_product_id}}
+PUT http://localhost:8083/api/products/{{gw_product_id_1}}
 Authorization: Bearer {{gw_admin_token}}
 Content-Type: application/json
 
 {
-  "name": "MacBook Pro M3 Updated",
-  "description": "Latest Apple laptop with M3 chip - Updated",
-  "price": 2599.99,
-  "stockQuantity": 25
+  "name": "Laptop Dell XPS 15 Updated",
+  "description": "High performance laptop with extra RAM",
+  "price": 1399.99,
+  "stockQuantity": 45
 }
 
 ###
 
+### Delete product via Gateway - ADMIN
+DELETE http://localhost:8083/api/products/{{gw_product_id_1}}
+Authorization: Bearer {{gw_admin_token}}
+
+###
+
 ### ========================================
-### 3. ORDER OPERATIONS via Gateway
+### 3. ORDER OPERATIONS (through Gateway)
 ### ========================================
 
 ### Create Order via Gateway - CLIENT
@@ -93,13 +106,17 @@ Content-Type: application/json
 {
   "items": [
     {
-      "productId": {{gw_product_id}},
+      "productId": {{gw_product_id_1}},
       "quantity": 2
+    },
+    {
+      "productId": {{gw_product_id_2}},
+      "quantity": 1
     }
   ]
 }
 
-> {% client.global.set("gw_order_id", response.body.id) %}
+> {% client.global.set("gw_order_id_1", response.body.id) %}
 
 ###
 
@@ -110,7 +127,7 @@ Authorization: Bearer {{gw_client_token}}
 ###
 
 ### Get specific order via Gateway - CLIENT
-GET http://localhost:8083/api/orders/{{gw_order_id}}
+GET http://localhost:8083/api/orders/{{gw_order_id_1}}
 Authorization: Bearer {{gw_client_token}}
 
 ###
@@ -122,62 +139,38 @@ Authorization: Bearer {{gw_admin_token}}
 ###
 
 ### ========================================
-### 4. ERROR SCENARIOS via Gateway
+### 4. VERIFY DIRECT ACCESS IS BLOCKED
 ### ========================================
 
-### Try to access without token (Should fail with 401)
-GET http://localhost:8083/api/products
+### Try to access Product Service directly (Should FAIL - Connection refused)
+GET http://localhost:8081/api/products
 
 ###
 
-### Try to create product as CLIENT (Should fail with 403)
-POST http://localhost:8083/api/products
-Authorization: Bearer {{gw_client_token}}
-Content-Type: application/json
-
-{
-  "name": "Unauthorized Product",
-  "description": "This should fail",
-  "price": 99.99,
-  "stockQuantity": 10
-}
+### Try to access Order Service directly (Should FAIL - Connection refused)
+GET http://localhost:8082/api/orders
 
 ###
 
-### Try to create order as ADMIN (Should fail with 403)
-POST http://localhost:8083/api/orders
-Authorization: Bearer {{gw_admin_token}}
-Content-Type: application/json
+### Try to access Keycloak directly (Should FAIL - Connection refused)
+POST http://localhost:8080/realms/ecommerce/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
 
-{
-  "items": [
-    {
-      "productId": {{gw_product_id}},
-      "quantity": 1
-    }
-  ]
-}
-
-###
-
-### Try to get all orders as CLIENT (Should fail with 403)
-GET http://localhost:8083/api/orders
-Authorization: Bearer {{gw_client_token}}
-
-###
-
-### Try invalid route (Should fail with 404)
-GET http://localhost:8083/api/invalid-route
-Authorization: Bearer {{gw_admin_token}}
+grant_type=password&client_id=product-service&client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6&username=admin&password=admin123
 
 ###
 
 ### ========================================
-### 5. HEALTH CHECKS
+### 5. HEALTH CHECKS (through Gateway)
 ### ========================================
 
-### Gateway Health
+### Gateway Health Check
 GET http://localhost:8083/actuator/health
+
+###
+
+### Gateway Info
+GET http://localhost:8083/actuator/info
 
 ###
 
@@ -187,121 +180,32 @@ GET http://localhost:8083/actuator/gateway/routes
 ###
 
 ### ========================================
-### 6. COMPARISON: Direct vs Gateway Access
+### 6. ERROR SCENARIOS (through Gateway)
 ### ========================================
 
-### ❌ DIRECT ACCESS to Product Service (Should work but NOT RECOMMENDED)
-GET http://localhost:8081/api/products
-Authorization: Bearer {{gw_client_token}}
-
-###
-
-### ✅ ACCESS via Gateway (RECOMMENDED)
+### Try without authentication (Should return 401)
 GET http://localhost:8083/api/products
-Authorization: Bearer {{gw_client_token}}
 
 ###
 
-### ========================================
-### 7. COMPLETE WORKFLOW via Gateway
-### ========================================
-
-### STEP 1: Login as CLIENT
-POST http://localhost:8083/realms/ecommerce/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=password
-    &client_id=product-service
-    &client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6
-    &username=client
-    &password=client123
-
-> {% client.global.set("workflow_token", response.body.access_token) %}
-
-###
-
-### STEP 2: Browse products
-GET http://localhost:8083/api/products
-Authorization: Bearer {{workflow_token}}
-
-###
-
-### STEP 3: Get product details
-GET http://localhost:8083/api/products/1
-Authorization: Bearer {{workflow_token}}
-
-###
-
-### STEP 4: Create order
+### Try to create order as ADMIN (Should return 403 - only CLIENT role)
 POST http://localhost:8083/api/orders
-Authorization: Bearer {{workflow_token}}
+Authorization: Bearer {{gw_admin_token}}
 Content-Type: application/json
 
 {
   "items": [
     {
-      "productId": 1,
-      "quantity": 2
+      "productId": {{gw_product_id_1}},
+      "quantity": 1
     }
   ]
 }
 
-> {% client.global.set("workflow_order_id", response.body.id) %}
-
 ###
 
-### STEP 5: View order confirmation
-GET http://localhost:8083/api/orders/{{workflow_order_id}}
-Authorization: Bearer {{workflow_token}}
-
-###
-
-### STEP 6: View order history
-GET http://localhost:8083/api/orders/my-orders
-Authorization: Bearer {{workflow_token}}
-
-###
-
-### ========================================
-### 8. ADMIN WORKFLOW via Gateway
-### ========================================
-
-### Login as ADMIN
-POST http://localhost:8083/realms/ecommerce/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=password
-    &client_id=product-service
-    &client_secret=5y1n2QKOD9sTqgb9XvSOwCK3upLsqrd6
-    &username=admin
-    &password=admin123
-
-> {% client.global.set("admin_workflow_token", response.body.access_token) %}
-
-###
-
-### Add multiple products
-POST http://localhost:8083/api/products
-Authorization: Bearer {{admin_workflow_token}}
-Content-Type: application/json
-
-{
-  "name": "iPad Pro",
-  "description": "Tablet with M2 chip",
-  "price": 1099.99,
-  "stockQuantity": 50
-}
-
-###
-
-### View all orders
+### Try to get all orders as CLIENT (Should return 403 - only ADMIN)
 GET http://localhost:8083/api/orders
-Authorization: Bearer {{admin_workflow_token}}
-
-###
-
-### View all products
-GET http://localhost:8083/api/products
-Authorization: Bearer {{admin_workflow_token}}
+Authorization: Bearer {{gw_client_token}}
 
 ###

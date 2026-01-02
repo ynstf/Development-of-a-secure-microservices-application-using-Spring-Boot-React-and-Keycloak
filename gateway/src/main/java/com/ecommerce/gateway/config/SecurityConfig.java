@@ -37,7 +37,11 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         // Public endpoints - no authentication required
                         .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/realms/ecommerce/protocol/openid-connect/**").permitAll()
+
+                        // Keycloak endpoints - public (for login, token, etc.)
+                        .pathMatchers("/realms/**").permitAll()
+                        .pathMatchers("/admin/**").permitAll()
+                        .pathMatchers("/resources/**").permitAll()
 
                         // Product endpoints - require authentication
                         .pathMatchers("/api/products/**").authenticated()

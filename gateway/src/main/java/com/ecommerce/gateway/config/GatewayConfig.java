@@ -22,11 +22,18 @@ public class GatewayConfig {
     @Value("${microservices.order-service.url}")
     private String orderServiceUrl;
 
-    @Bean // Activated this bean
+    @Value("${keycloak.url:http://keycloak:8080}")
+    private String keycloakUrl;
+
+    @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         log.info("Configuring gateway routes programmatically");
+        log.info("Product Service URL: {}", productServiceUrl);
+        log.info("Order Service URL: {}", orderServiceUrl);
+        log.info("Keycloak URL: {}", keycloakUrl);
 
         return builder.routes()
+                // Product Service Routes
                 .route("product-service", r -> r
                         .path("/api/products/**")
                         .filters(f -> f
@@ -34,6 +41,8 @@ public class GatewayConfig {
                         )
                         .uri(productServiceUrl)
                 )
+
+                // Order Service Routes
                 .route("order-service", r -> r
                         .path("/api/orders/**")
                         .filters(f -> f
@@ -41,10 +50,34 @@ public class GatewayConfig {
                         )
                         .uri(orderServiceUrl)
                 )
+
+                // Keycloak Authentication Routes (Token endpoint, etc.)
                 .route("keycloak-auth", r -> r
-                        .path("/realms/ecommerce/protocol/openid-connect/**")
-                        .uri("http://localhost:8080")
+                        .path("/realms/**")
+                        .filters(f -> f
+                                .filter(loggingFilter.apply(new LoggingFilter.Config()))
+                        )
+                        .uri(keycloakUrl)
                 )
+
+                // Keycloak Admin Console (optional, for debugging)
+                .route("keycloak-admin", r -> r
+                        .path("/admin/**")
+                        .filters(f -> f
+                                .filter(loggingFilter.apply(new LoggingFilter.Config()))
+                        )
+                        .uri(keycloakUrl)
+                )
+
+                // Keycloak Resources (CSS, JS, etc.)
+                .route("keycloak-resources", r -> r
+                        .path("/resources/**")
+                        .filters(f -> f
+                                .filter(loggingFilter.apply(new LoggingFilter.Config()))
+                        )
+                        .uri(keycloakUrl)
+                )
+
                 .build();
     }
 }

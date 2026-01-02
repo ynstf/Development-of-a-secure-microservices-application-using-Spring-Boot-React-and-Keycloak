@@ -13,8 +13,8 @@ services:
       POSTGRES_DB: productdb
       POSTGRES_USER: productuser
       POSTGRES_PASSWORD: productpass
-    ports:
-      - "5432:5432"
+#    ports:
+#      - "5432:5432"
     volumes:
       - product-db-data:/var/lib/postgresql/data
     networks:
@@ -33,8 +33,8 @@ services:
       POSTGRES_DB: orderdb
       POSTGRES_USER: orderuser
       POSTGRES_PASSWORD: orderpass
-    ports:
-      - "5433:5432"
+#    ports:
+#      - "5433:5432"
     volumes:
       - order-db-data:/var/lib/postgresql/data
     networks:
@@ -76,8 +76,8 @@ services:
       KC_HOSTNAME_STRICT: false
       KC_HTTP_ENABLED: true
     command: start-dev
-    ports:
-      - "8080:8080"
+#    ports:
+#      - "8080:8080"
     depends_on:
       - keycloak-db
     networks:
@@ -99,8 +99,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: productpass
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
-    ports:
-      - "8081:8081"
+#    ports:
+#      - "8081:8081"
     depends_on:
       product-db:
         condition: service_healthy
@@ -123,8 +123,8 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
       PRODUCT_SERVICE_URL: http://product-service:8081/api/products
-    ports:
-      - "8082:8082"
+#    ports:
+#      - "8082:8082"
     depends_on:
       order-db:
         condition: service_healthy
@@ -137,18 +137,25 @@ services:
     restart: unless-stopped
 
 
-  # API Gateway
+  # API GATEWAY - ONLY EXTERNAL PORT
   api-gateway:
     build:
       context: ./gateway
       dockerfile: Dockerfile
     container_name: api-gateway
     environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      # Use internal keycloak hostname for JWT validation
+      #SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+      #SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
+      # Internal service URLs
       MICROSERVICES_PRODUCT_SERVICE_URL: http://product-service:8081
       MICROSERVICES_ORDER_SERVICE_URL: http://order-service:8082
+      # Keycloak internal URL
+      KEYCLOAK_URL: http://keycloak:8080
     ports:
+      # ONLY THE GATEWAY IS EXPOSED
       - "8083:8083"
     depends_on:
       keycloak:
