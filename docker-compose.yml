@@ -136,6 +136,31 @@ services:
       - ecommerce-network
     restart: unless-stopped
 
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
+      MICROSERVICES_PRODUCT_SERVICE_URL: http://product-service:8081
+      MICROSERVICES_ORDER_SERVICE_URL: http://order-service:8082
+    ports:
+      - "8083:8083"
+    depends_on:
+      keycloak:
+        condition: service_started
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
 # ========================================
 # VOLUMES
 # ========================================
