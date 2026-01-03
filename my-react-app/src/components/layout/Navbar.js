@@ -4,7 +4,7 @@ import { ShoppingBag, LogOut, User, Menu, X, Package, ShoppingCart } from 'lucid
 import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
-    const { user, logout, isAdmin } = useAuth();
+    const { user, logout, isAdmin, isClient } = useAuth();
     const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -45,7 +45,7 @@ const Navbar = () => {
                                     </Link>
                                 )}
 
-                                {!isAdmin() && (
+                                {isClient() && (
                                     <Link
                                         to="/orders"
                                         className="text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2"
@@ -69,8 +69,13 @@ const Navbar = () => {
                                     <span className="text-white font-medium">{user.username}</span>
                                     {isAdmin() && (
                                         <span className="bg-yellow-400 text-yellow-900 text-xs px-2 py-1 rounded-full font-semibold">
-                      ADMIN
-                    </span>
+                                            ADMIN
+                                        </span>
+                                    )}
+                                    {isClient() && (
+                                        <span className="bg-green-400 text-green-900 text-xs px-2 py-1 rounded-full font-semibold">
+                                            CLIENT
+                                        </span>
                                     )}
                                 </div>
 
@@ -121,7 +126,7 @@ const Navbar = () => {
                                     </Link>
                                 )}
 
-                                {!isAdmin() && (
+                                {isClient() && (
                                     <Link
                                         to="/orders"
                                         className="text-white block px-3 py-2 rounded-md hover:bg-white/20"

@@ -8,18 +8,45 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // Check token expiration
+    const isTokenExpired = (token) => {
+        try {
+            const decoded = jwtDecode(token);
+            const currentTime = Date.now() / 1000;
+            return decoded.exp < currentTime;
+        } catch {
+            return true;
+        }
+    };
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                setUser({
-                    username: decoded.preferred_username,
-                    roles: decoded.realm_access?.roles || [],
-                    email: decoded.email,
-                });
-            } catch (error) {
+            if (isTokenExpired(token)) {
+                // Token expired, clear storage
                 localStorage.removeItem('token');
+                setUser(null);
+            } else {
+                try {
+                    const decoded = jwtDecode(token);
+                    setUser({
+                        username: decoded.preferred_username,
+                        roles: decoded.realm_access?.roles || [],
+                        email: decoded.email,
+                    });
+
+                    // Set up automatic logout when token expires
+                    const timeUntilExpiry = (decoded.exp * 1000) - Date.now();
+                    const logoutTimer = setTimeout(() => {
+                        logout();
+                        alert('Your session has expired. Please login again.');
+                        window.location.href = '/login';
+                    }, timeUntilExpiry);
+
+                    return () => clearTimeout(logoutTimer);
+                } catch (error) {
+                    localStorage.removeItem('token');
+                }
             }
         }
         setLoading(false);
@@ -40,6 +67,15 @@ export const AuthProvider = ({ children }) => {
             };
 
             setUser(userData);
+
+            // Set up automatic logout when token expires
+            const timeUntilExpiry = (decoded.exp * 1000) - Date.now();
+            setTimeout(() => {
+                logout();
+                alert('Your session has expired. Please login again.');
+                window.location.href = '/login';
+            }, timeUntilExpiry);
+
             return { success: true };
         } catch (error) {
             return {
@@ -55,11 +91,11 @@ export const AuthProvider = ({ children }) => {
     };
 
     const isAdmin = () => {
-        return user?.roles?.includes('admin');
+        return user?.roles?.some(role => role.toLowerCase() === 'admin');
     };
 
     const isClient = () => {
-        return user?.roles?.includes('client');
+        return user?.roles?.some(role => role.toLowerCase() === 'client');
     };
 
     return (

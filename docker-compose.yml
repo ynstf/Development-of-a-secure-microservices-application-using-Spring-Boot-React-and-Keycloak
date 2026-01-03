@@ -168,6 +168,22 @@ services:
       - ecommerce-network
     restart: unless-stopped
 
+
+
+  # FRONTEND
+  frontend:
+    build:
+      context: ./my-react-app
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
 # ========================================
 # VOLUMES
 # ========================================

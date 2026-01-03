@@ -12,6 +12,7 @@ import java.util.List;
 /**
  * CORS Configuration for API Gateway
  * Allows frontend applications to access the gateway
+ * Note: Keycloak paths (/realms/**) are excluded as Keycloak handles its own CORS
  */
 @Configuration
 public class CorsConfig {
@@ -53,7 +54,11 @@ public class CorsConfig {
         ));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig);
+
+        // Apply CORS to all paths EXCEPT Keycloak paths
+        // Keycloak handles its own CORS
+        source.registerCorsConfiguration("/api/**", corsConfig);
+        source.registerCorsConfiguration("/actuator/**", corsConfig);
 
         return new CorsWebFilter(source);
     }

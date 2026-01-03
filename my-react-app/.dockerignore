@@ -1,0 +1,23 @@
+# Ignore local dependencies (force Docker to install its own)
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Ignore build artifacts
+build
+dist
+.git
+
+# Ignore environment files containing secrets (optional, depending on your setup)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.idea
+.vscode
+*.suo
+*.ntvs
+*.njsproj
+*.sln

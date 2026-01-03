@@ -10,7 +10,8 @@ const Products = () => {
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(false);
-    const { isAdmin } = useAuth();
+    const { isAdmin, isClient } = useAuth();
+
 
     useEffect(() => {
         fetchProducts();
@@ -119,7 +120,7 @@ const Products = () => {
                                 />
                             </div>
 
-                            {!isAdmin() && (
+                            {isClient() && (
                                 <button
                                     onClick={() => setShowCart(!showCart)}
                                     className="relative bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center space-x-2"
@@ -182,7 +183,7 @@ const Products = () => {
                     </span>
                                     </div>
 
-                                    {!isAdmin() && (
+                                    {isClient() && (
                                         <button
                                             onClick={() => addToCart(product)}
                                             disabled={product.stockQuantity === 0}

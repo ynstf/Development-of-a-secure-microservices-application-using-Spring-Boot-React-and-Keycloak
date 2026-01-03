@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8083';
+// Use environment variable or default to localhost for development
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8083';
 
 // Create axios instance
 const api = axios.create({
@@ -24,11 +25,12 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor to handle errors
+// Response interceptor to handle errors and token expiration
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            // Token expired or invalid
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             window.location.href = '/login';
