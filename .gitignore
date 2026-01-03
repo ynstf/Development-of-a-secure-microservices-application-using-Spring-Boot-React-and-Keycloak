@@ -4,7 +4,7 @@
 # Log file
 *.log
 
-my-react-app/node_modules/
+frontend/node_modules/
 node_modules/
 
 # BlueJ files

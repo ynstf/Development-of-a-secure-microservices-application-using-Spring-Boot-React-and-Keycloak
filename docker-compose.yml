@@ -173,7 +173,7 @@ services:
   # FRONTEND
   frontend:
     build:
-      context: ./my-react-app
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: frontend
     ports:
