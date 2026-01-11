@@ -183,7 +183,15 @@ Scans Docker images for OS and library vulnerabilities.
 ```
 
 **Results Interface:**
-![Trivy Scan Results](C:/Users/pc/.gemini/antigravity/brain/3b142bbc-6eb3-4203-8490-20d80830b258/trivy_scan_results_mockup_1768166317498.png)
+
+<img width="951" height="246" alt="image" src="https://github.com/user-attachments/assets/9688e5ea-d696-4c11-9428-f49e09e7368a" />
+
+<img width="978" height="702" alt="image" src="https://github.com/user-attachments/assets/cdf3d0c2-a973-4685-9d3f-52d599667dd8" />
+
+<img width="786" height="625" alt="image" src="https://github.com/user-attachments/assets/fcba3091-e576-475b-865c-79390ceaeb6a" />
+
+<img width="604" height="168" alt="image" src="https://github.com/user-attachments/assets/92fc9534-e6a3-4cb1-9ce5-0c74c4de12de" />
+
 
 ### 3. Dependency Scanning (OWASP)
 detects publicly disclosed vulnerabilities contained within project dependencies.
