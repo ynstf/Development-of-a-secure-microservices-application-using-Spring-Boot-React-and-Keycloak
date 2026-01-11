@@ -1,5 +1,8 @@
 # Secure Microservices E-Commerce Application
 
+<img width="1318" height="277" alt="image_1" src="https://github.com/user-attachments/assets/b92c888b-0542-4977-97f0-ff3c9ad0e144" />
+
+
 A robust, secure e-commerce platform built with **Spring Boot Microservices**, **React**, **Keycloak** (OAuth2/OIDC), and a comprehensive **DevSecOps** pipeline offering static analysis (SonarQube) and container scanning (Trivy).
 
 ---
@@ -90,8 +93,8 @@ graph TD
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/your-username/secure-microservices-ecommerce.git
-    cd secure-microservices-ecommerce
+    git clone https://github.com/ynstf/Development-of-a-secure-microservices-application-using-Spring-Boot-React-and-Keycloak.git
+    cd Development-of-a-secure-microservices-application-using-Spring-Boot-React-and-Keycloak
     ```
 
 2.  **Build and Start Services**
@@ -112,12 +115,16 @@ graph TD
 ### Client View: Products
 Customers can browse products and add them to their cart.
 
-![Products Page](C:/Users/pc/.gemini/antigravity/brain/3b142bbc-6eb3-4203-8490-20d80830b258/products_page_client_1768166267026.png)
+<img width="1281" height="637" alt="image" src="https://github.com/user-attachments/assets/ea30780e-65f1-441c-bf49-3d4a8829c6b4" />
+
 
 ### Admin View: Orders
 Administrators can view and manage customer orders.
 
-![Orders Page](C:/Users/pc/.gemini/antigravity/brain/3b142bbc-6eb3-4203-8490-20d80830b258/orders_page_admin_1768166283707.png)
+<img width="1286" height="524" alt="image" src="https://github.com/user-attachments/assets/a182ca98-3223-483c-95f4-0b7263a1b7eb" />
+
+<img width="1276" height="636" alt="image" src="https://github.com/user-attachments/assets/d47ce1bb-3243-4e61-b177-d297eb451fe9" />
+
 
 ### Order Process Flow (Sequence Diagram)
 How an order is placed and processed through the system:
@@ -160,7 +167,12 @@ Code quality and security hotspots analysis.
 ```
 
 **Dashboard:**
-![SonarQube Dashboard](C:/Users/pc/.gemini/antigravity/brain/3b142bbc-6eb3-4203-8490-20d80830b258/sonarqube_dashboard_mockup_1768166300940.png)
+<img width="1338" height="642" alt="sonar 1" src="https://github.com/user-attachments/assets/a0b60804-2278-4b03-9b43-e3eb9a7c07e0" />
+
+<img width="907" height="519" alt="sonar 2" src="https://github.com/user-attachments/assets/ac03c42c-180c-4bb3-8867-8c4d70f300ed" />
+
+<img width="1200" height="488" alt="sonar 3" src="https://github.com/user-attachments/assets/6c4be4d1-59be-4158-a3af-0b7327167689" />
+
 
 ### 2. Container Security (Trivy)
 Scans Docker images for OS and library vulnerabilities.
@@ -180,10 +192,3 @@ detects publicly disclosed vulnerabilities contained within project dependencies
 ```powershell
 .\scan_dependency_check.ps1
 ```
-
----
-
-## 📄 API Documentation
-
-*   **Product Service**: `http://localhost:8081/swagger-ui.html`
-*   **Order Service**: `http://localhost:8082/swagger-ui.html`
