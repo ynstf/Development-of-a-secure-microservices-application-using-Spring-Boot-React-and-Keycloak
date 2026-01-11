@@ -24,6 +24,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -32,23 +36,25 @@ public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
     private String jwkSetUri;
 
+    @Scope("prototype")
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector) {
+        return new MvcRequestMatcher.Builder(introspector);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .requestMatchers(mvc.pattern("/actuator/**")).permitAll()
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder())
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                        )
-                )
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
@@ -71,8 +77,7 @@ public class SecurityConfig {
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
                 new JwtTimestampValidator(),
-                customIssuerValidator
-        );
+                customIssuerValidator);
 
         jwtDecoder.setJwtValidator(validator);
         return jwtDecoder;
@@ -85,8 +90,8 @@ public class SecurityConfig {
         return converter;
     }
 
-    @Bean
-    public Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter() {
+    // @Bean removed to avoid generic type resolution issue
+    private Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter() {
         return jwt -> {
             Map<String, Object> realmAccess = jwt.getClaim("realm_access");
             Collection<GrantedAuthority> realmRoles = List.of();

@@ -106,8 +106,8 @@
                         </path>
                     </annotationProcessorPaths>
 
-                    <source>9</source>
-                    <target>9</target>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
             </plugin>
             <plugin>
